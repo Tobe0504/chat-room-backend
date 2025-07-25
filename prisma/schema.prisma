@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model User {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  username       String           @unique 
+  rooms          RoomUser[]
+  createdAt      DateTime         @default(now())
+  Message        Message[]
+  RoomReadStatus RoomReadStatus[]
+}
+
+model Room {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  name      String       @unique           
+  ownerId   String
+  messages  Message[]
+  users     RoomUser[]
+  createdAt DateTime    @default(now())
+  RoomReadStatus RoomReadStatus[]
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  senderId  String   @db.ObjectId
+  sender    User     @relation(fields: [senderId], references: [id])
+  roomId    String   @db.ObjectId
+  room      Room     @relation(fields: [roomId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model RoomReadStatus {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  roomId String @db.ObjectId
+
+  user User @relation(fields: [userId], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
+
+  readAt DateTime
+}
+
+model RoomUser {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  roomId String @db.ObjectId
+
+  user User @relation(fields: [userId], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, roomId])
+}
